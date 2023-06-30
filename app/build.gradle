@@ -47,4 +47,7 @@ dependencies {
 
     //okhttp
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
+
+    // web socket client for testing
+    implementation 'com.tinder.scarlet:scarlet:0.1.12'
 }
