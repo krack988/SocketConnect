@@ -44,4 +44,7 @@ dependencies {
 
     // Timber
     implementation "com.jakewharton.timber:timber:5.0.1"
+
+    //okhttp
+    implementation "com.squareup.okhttp3:okhttp:4.10.0"
 }
