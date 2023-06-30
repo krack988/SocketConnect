@@ -9,10 +9,12 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.socketconnect.databinding.FragmentStartBinding
 import com.example.socketconnect.socket.SocketViewModel
 import com.example.socketconnect.socket.listener.WebSocketListener
+import dagger.hilt.android.AndroidEntryPoint
 import okhttp3.OkHttpClient
 import okhttp3.WebSocket
 import timber.log.Timber
 
+@AndroidEntryPoint
 class StartFragment : Fragment() {
 
     private var binding: FragmentStartBinding? = null
