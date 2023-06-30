@@ -13,12 +13,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import okhttp3.OkHttpClient
 import okhttp3.WebSocket
 import timber.log.Timber
+import androidx.fragment.app.viewModels
 
 @AndroidEntryPoint
 class StartFragment : Fragment() {
 
     private var binding: FragmentStartBinding? = null
-    private lateinit var viewModel: SocketViewModel
+    private val viewModel: SocketViewModel by viewModels()
 
     private lateinit var webSocketListener: WebSocketListener
     private val okHttpClient = OkHttpClient()
@@ -35,7 +36,6 @@ class StartFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this)[SocketViewModel::class.java]
         webSocketListener = WebSocketListener(viewModel)
     }
 
