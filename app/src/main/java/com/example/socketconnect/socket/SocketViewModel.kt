@@ -27,11 +27,11 @@ class SocketViewModel : ViewModel() {
     }
 
     fun getConnectRequest(): Request {
-//        val websocketURL = "wss://${Constants.CLUSTER_ID}.piesocket.com/v3/1?api_key=${Constants.API_KEY}"
-        val websocketURL = ""
+        val websocketURL = "http://192.168.100.5:8080/ws"
 
         return Request.Builder()
             .url(websocketURL)
+//            .addHeader("Authorization","Basic ")
             .build()
     }
 }
