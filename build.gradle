@@ -5,10 +5,13 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter()
+        maven { url 'https://jitpack.io' }
     }
 
     dependencies {
-//        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.45'
+        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.45'
     }
 }
 
