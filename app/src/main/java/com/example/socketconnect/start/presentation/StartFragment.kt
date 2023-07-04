@@ -52,8 +52,9 @@ class StartFragment : Fragment() {
 
         binding?.testTV?.setOnClickListener {
             val testMessage = "Test message from android app"
-            webSocket?.send(testMessage)
-            viewModel.sendMessage(Pair(true, testMessage))
+//            webSocket?.send(testMessage)
+//            viewModel.sendMessage(Pair(true, testMessage))
+            viewModel.sendMessage(testMessage)
         }
     }
 
