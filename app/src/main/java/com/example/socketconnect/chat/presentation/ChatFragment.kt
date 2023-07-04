@@ -30,5 +30,10 @@ class ChatFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding?.sendMessageBtn?.setOnClickListener {
+            val message = binding?.messageEV?.text.toString()
+            activityViewModel.sendMessage(message)
+        }
     }
 }

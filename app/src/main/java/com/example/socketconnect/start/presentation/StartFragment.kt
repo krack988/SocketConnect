@@ -15,6 +15,7 @@ import okhttp3.OkHttpClient
 import okhttp3.WebSocket
 import timber.log.Timber
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.example.socketconnect.MainActivityViewModel
 
 @AndroidEntryPoint
@@ -50,10 +51,11 @@ class StartFragment : Fragment() {
         }
 
         binding?.testTV?.setOnClickListener {
-            val testMessage = "Test message from android app"
+//            val testMessage = "Test message from android app"
 //            webSocket?.send(testMessage)
 //            viewModel.sendMessage(Pair(true, testMessage))
-            activityViewModel.sendMessage(testMessage)
+            /** move to chat fragment for testing */
+            findNavController().navigate(StartFragmentDirections.toChat())
         }
 
         binding?.disconnectBtn?.setOnClickListener {
