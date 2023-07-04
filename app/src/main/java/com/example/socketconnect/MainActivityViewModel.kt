@@ -1,5 +1,7 @@
 package com.example.socketconnect
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.socketconnect.chat.data.ChatSocketMessage
 import com.google.gson.Gson
@@ -17,7 +19,7 @@ import ua.naiksoftware.stomp.dto.StompMessage
 import javax.inject.Inject
 
 @HiltViewModel
-class MainActivityViewModel @Inject constructor(): ViewModel() {
+class MainActivityViewModel @Inject constructor() : ViewModel() {
 
     private val gson: Gson = GsonBuilder().create()
     private var mStompClient: StompClient? = null
@@ -25,6 +27,15 @@ class MainActivityViewModel @Inject constructor(): ViewModel() {
     private val SOCKET_URL = "ws://192.168.100.5:8080/ws/websocket"
     private val CHAT_TOPIC = "/all/messages"
     private val CHAT_LINK_SOCKET = "/app/application"
+
+    private val _socketStatus = MutableLiveData(false)
+    val socketStatus: LiveData<Boolean> = _socketStatus
+
+    private val _messages = MutableLiveData<String>()
+    val messages: LiveData<String> = _messages
+
+    private val _errorMsg = MutableLiveData<String>()
+    val errorMsg: LiveData<String> = _errorMsg
 
     fun stompConnect() {
         resetSubscriptions()
@@ -39,9 +50,11 @@ class MainActivityViewModel @Inject constructor(): ViewModel() {
                 Timber.tag("stompTAG").d(topicMessage.payload)
                 val message: ChatSocketMessage =
                     gson.fromJson(topicMessage.payload, ChatSocketMessage::class.java)
+                _messages.value = topicMessage.payload
             },
                 {
                     Timber.tag("stompTAG").e(it, "Error!")
+                    _errorMsg.value = "Error! \n" + it.message.orEmpty()
                 }
             )
 
@@ -50,11 +63,18 @@ class MainActivityViewModel @Inject constructor(): ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { lifecycleEvent ->
                 when (lifecycleEvent.type!!) {
-                    LifecycleEvent.Type.OPENED -> Timber.tag("stompTAG").d( "Stomp connection opened")
-                    LifecycleEvent.Type.ERROR -> Timber.tag("stompTAG").e( lifecycleEvent.exception, "Error")
+                    LifecycleEvent.Type.OPENED -> {
+                        Timber.tag("stompTAG").d("Stomp connection opened")
+                        _socketStatus.value = true
+                    }
+
+                    LifecycleEvent.Type.ERROR -> Timber.tag("stompTAG")
+                        .e(lifecycleEvent.exception, "Error")
+
                     LifecycleEvent.Type.FAILED_SERVER_HEARTBEAT,
                     LifecycleEvent.Type.CLOSED -> {
-                        Timber.tag("stompTAG").d( "Stomp connection closed")
+                        Timber.tag("stompTAG").d("Stomp connection closed")
+                        _socketStatus.value = false
                     }
                 }
             }
@@ -68,8 +88,10 @@ class MainActivityViewModel @Inject constructor(): ViewModel() {
     }
 
     fun sendMessage(text: String) {
-        val message = ChatSocketMessage(text = text, author = "Me")
-        sendCompletable(mStompClient!!.send(CHAT_LINK_SOCKET, gson.toJson(message)))
+        if (mStompClient != null) {
+            val message = ChatSocketMessage(text = text, author = "Me")
+            sendCompletable(mStompClient!!.send(CHAT_LINK_SOCKET, gson.toJson(message)))
+        }
     }
 
     fun disconnect() {
@@ -87,6 +109,7 @@ class MainActivityViewModel @Inject constructor(): ViewModel() {
                     },
                     {
                         Timber.tag("stompTAG").e(it, "Stomp error")
+                        _errorMsg.value = "Send Error! \n" + it.message.orEmpty()
                     }
                 )
         )

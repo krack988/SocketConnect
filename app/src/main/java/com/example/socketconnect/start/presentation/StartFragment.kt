@@ -16,6 +16,7 @@ import okhttp3.WebSocket
 import timber.log.Timber
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.example.socketconnect.MainActivity
 import com.example.socketconnect.MainActivityViewModel
 
 @AndroidEntryPoint
@@ -62,9 +63,23 @@ class StartFragment : Fragment() {
             activityViewModel.disconnect()
         }
 
+        activityViewModel.socketStatus.observe(viewLifecycleOwner) {
+            if (it) {
+                findNavController().navigate(StartFragmentDirections.toChat())
+            }
+        }
+
+        activityViewModel.errorMsg.observe(viewLifecycleOwner) {
+            showError(it)
+        }
+
 //        viewModel.socketStatus.observe(viewLifecycleOwner) {
 //            Timber.tag(TIMBER_TEST_TAG).i(if (it) "Connected" else "Disconnected")
 //        }
+    }
+
+    private fun showError(error: String) {
+        (activity as? MainActivity)?.showErrorSnackBar(error)
     }
 
     private fun connect() {

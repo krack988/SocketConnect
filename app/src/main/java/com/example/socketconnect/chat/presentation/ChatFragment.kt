@@ -11,6 +11,7 @@ import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.chat.ChatViewModel
 import com.example.socketconnect.databinding.FragmentChatBinding
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class ChatFragment : Fragment() {
@@ -34,6 +35,10 @@ class ChatFragment : Fragment() {
         binding?.sendMessageBtn?.setOnClickListener {
             val message = binding?.messageEV?.text.toString()
             activityViewModel.sendMessage(message)
+        }
+
+        activityViewModel.messages.observe(viewLifecycleOwner) {
+            Timber.d(it)
         }
     }
 }
