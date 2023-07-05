@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.chat.ChatViewModel
 import com.example.socketconnect.databinding.FragmentChatBinding
@@ -19,6 +20,7 @@ class ChatFragment : Fragment() {
     private var binding: FragmentChatBinding? = null
     private val viewModel: ChatViewModel by viewModels()
     private val activityViewModel: MainActivityViewModel by activityViewModels()
+    private var adapter: ChatAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,6 +34,10 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        adapter = ChatAdapter(requireContext())
+        binding?.chatRV?.layoutManager = LinearLayoutManager(requireContext())
+        binding?.chatRV?.adapter = adapter
+
         binding?.sendMessageBtn?.setOnClickListener {
             val message = binding?.messageEV?.text.toString()
             activityViewModel.sendMessage(message)
@@ -39,6 +45,7 @@ class ChatFragment : Fragment() {
 
         activityViewModel.messages.observe(viewLifecycleOwner) {
             Timber.d(it)
+            adapter?.updateMessageList(it.orEmpty())
         }
     }
 }

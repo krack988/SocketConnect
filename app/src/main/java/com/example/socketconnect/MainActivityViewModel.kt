@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.socketconnect.chat.data.ChatSocketMessage
+import com.example.socketconnect.common.SingleLiveEvent
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,7 +29,7 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
     private val CHAT_TOPIC = "/all/messages"
     private val CHAT_LINK_SOCKET = "/app/application"
 
-    private val _socketStatus = MutableLiveData(false)
+    private val _socketStatus = SingleLiveEvent<Boolean>()
     val socketStatus: LiveData<Boolean> = _socketStatus
 
     private val _messages = MutableLiveData<String>()
@@ -47,7 +48,7 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
             .subscribeOn(Schedulers.io(), false)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ topicMessage: StompMessage ->
-                Timber.tag("stompTAG").d(topicMessage.payload)
+                Timber.tag("stompTAG").d(topicMessage.payload + " from subscribe")
                 val message: ChatSocketMessage =
                     gson.fromJson(topicMessage.payload, ChatSocketMessage::class.java)
                 _messages.value = topicMessage.payload
@@ -65,7 +66,7 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
                 when (lifecycleEvent.type!!) {
                     LifecycleEvent.Type.OPENED -> {
                         Timber.tag("stompTAG").d("Stomp connection opened")
-                        _socketStatus.value = true
+                        _socketStatus.postValue(true)
                     }
 
                     LifecycleEvent.Type.ERROR -> Timber.tag("stompTAG")
@@ -74,7 +75,7 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
                     LifecycleEvent.Type.FAILED_SERVER_HEARTBEAT,
                     LifecycleEvent.Type.CLOSED -> {
                         Timber.tag("stompTAG").d("Stomp connection closed")
-                        _socketStatus.value = false
+                        _socketStatus.postValue(false)
                     }
                 }
             }
