@@ -42,10 +42,4 @@ class SocketViewModel @Inject constructor() : ViewModel() {
     }
     /** End clean socket connect */
 
-    data class ChatSocketMessage(
-        val text: String,
-        val author: String,
-        val datetime: LocalDateTime? = null,
-        var receiver: String? = null
-    )
 }

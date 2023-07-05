@@ -40,12 +40,13 @@ class ChatFragment : Fragment() {
 
         binding?.sendMessageBtn?.setOnClickListener {
             val message = binding?.messageEV?.text.toString()
+            binding?.messageEV?.text = null
             activityViewModel.sendMessage(message)
         }
 
         activityViewModel.messages.observe(viewLifecycleOwner) {
-            Timber.d(it)
-            adapter?.updateMessageList(it.orEmpty())
+            Timber.d(it.messageText)
+            adapter?.updateMessageList(it)
         }
     }
 }

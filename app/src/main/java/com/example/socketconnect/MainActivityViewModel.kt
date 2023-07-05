@@ -32,8 +32,8 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
     private val _socketStatus = SingleLiveEvent<Boolean>()
     val socketStatus: LiveData<Boolean> = _socketStatus
 
-    private val _messages = MutableLiveData<String>()
-    val messages: LiveData<String> = _messages
+    private val _messages = MutableLiveData<ChatSocketMessage>()
+    val messages: LiveData<ChatSocketMessage> = _messages
 
     private val _errorMsg = MutableLiveData<String>()
     val errorMsg: LiveData<String> = _errorMsg
@@ -48,10 +48,10 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
             .subscribeOn(Schedulers.io(), false)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ topicMessage: StompMessage ->
-                Timber.tag("stompTAG").d(topicMessage.payload + " from subscribe")
+                Timber.tag("stompTAG").d("%s from subscribe", topicMessage.payload)
                 val message: ChatSocketMessage =
                     gson.fromJson(topicMessage.payload, ChatSocketMessage::class.java)
-                _messages.value = topicMessage.payload
+                _messages.value = message
             },
                 {
                     Timber.tag("stompTAG").e(it, "Error!")
@@ -90,7 +90,7 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
 
     fun sendMessage(text: String) {
         if (mStompClient != null) {
-            val message = ChatSocketMessage(text = text, author = "Me")
+            val message = ChatSocketMessage(messageText = text, author = "Me")
             sendCompletable(mStompClient!!.send(CHAT_LINK_SOCKET, gson.toJson(message)))
         }
     }
