@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.socketconnect.MainActivity
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.chat.ChatViewModel
 import com.example.socketconnect.databinding.FragmentChatBinding
@@ -46,7 +47,17 @@ class ChatFragment : Fragment() {
 
         activityViewModel.messages.observe(viewLifecycleOwner) {
             Timber.d(it.messageText)
+            showPush(it.author.orEmpty(), it.messageText.orEmpty())
             adapter?.updateMessageList(it)
+            with(binding?.chatRV) {
+                this?.post {
+                    smoothScrollToPosition((adapter?.itemCount ?: 1) - 1)
+                }
+            }
         }
+    }
+
+    private fun showPush(title: String, message: String) {
+        (activity as? MainActivity)?.showNotification(title, message)
     }
 }
