@@ -1,10 +1,12 @@
 package com.example.socketconnect
 
 import android.Manifest
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -16,6 +18,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.example.socketconnect.chat.service.ChatClientService
 import com.example.socketconnect.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,6 +50,10 @@ class MainActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             checkPushPermission()
+        }
+
+        if (!foregroundServiceRunning()) {
+            startService()
         }
     }
 
@@ -107,6 +114,25 @@ class MainActivity : AppCompatActivity() {
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun foregroundServiceRunning(): Boolean {
+        val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        for (service in activityManager.getRunningServices(Int.MAX_VALUE)) {
+            if (ChatClientService::class.java.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun startService() {
+        val serviceIntent = Intent(this, ChatClientService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
         }
     }
 }
