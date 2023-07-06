@@ -19,7 +19,19 @@ import androidx.lifecycle.MutableLiveData
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.R
 import com.example.socketconnect.chat.data.ChatSocketMessage
+import com.example.socketconnect.common.SingleLiveEvent
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import io.reactivex.Completable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
+import ua.naiksoftware.stomp.Stomp
+import ua.naiksoftware.stomp.StompClient
+import ua.naiksoftware.stomp.dto.LifecycleEvent
+import ua.naiksoftware.stomp.dto.StompMessage
 import java.io.IOException
 
 
@@ -27,24 +39,38 @@ import java.io.IOException
 class ChatClientService : Service() {
 
     private val chanelId = "SERVICE_CHANNEL_ID"
-    private var viewModel: MainActivityViewModel? = null
     private var chatNotificationBuilder: NotificationCompat.Builder? = null
     private var pushCounter = 101
-    private val mBinder: IBinder = MyBinder()
+    private val mBinder: IBinder = ChatServiceBinder()
+
+
+    private val gson: Gson = GsonBuilder().create()
+    private var mStompClient: StompClient? = null
+    private var compositeDisposable: CompositeDisposable? = null
+    private val SOCKET_URL = "ws://192.168.100.5:8080/ws/websocket"
+    private val CHAT_TOPIC = "/all/messages"
+    private val CHAT_LINK_SOCKET = "/app/application"
+
+    private val _socketStatus = SingleLiveEvent<Boolean>()
+    val socketStatus: LiveData<Boolean> = _socketStatus
+
     private val _serviceMessages = MutableLiveData<ChatSocketMessage>()
     val serviceMessages: LiveData<ChatSocketMessage> = _serviceMessages
+
+    private val _errorMsg = MutableLiveData<String>()
+    val errorMsg: LiveData<String> = _errorMsg
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createServiceNotificationChannel()
         createChatNotificationChannel()
         createDefaultNotificationBuilder()
 
-        val notificationBuilder = NotificationCompat.Builder(this, chanelId)
+        val serviceNotificationBuilder = NotificationCompat.Builder(this, chanelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(resources.getString(R.string.chat_service_title))
             .setPriority(NotificationCompat.PRIORITY_LOW)
 
-        startForeground(1, notificationBuilder.build())
+        startForeground(1, serviceNotificationBuilder.build())
 
         return super.onStartCommand(intent, flags, startId)
     }
@@ -55,11 +81,24 @@ class ChatClientService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        viewModel = MainActivityViewModel()
-        viewModel?.stompConnect()
-        viewModel?.messages?.observeForever {
-            showNotification(it.author.orEmpty(), it.messageText.orEmpty())
-            _serviceMessages.postValue(it)
+//        viewModel = MainActivityViewModel()
+//        viewModel?.stompConnect()
+//        viewModel?.messages?.observeForever {
+//            showNotification(it.author.orEmpty(), it.messageText.orEmpty())
+//            _serviceMessages.postValue(it)
+//        }
+        stompConnect()
+    }
+
+    override fun onDestroy() {
+        disconnect()
+        super.onDestroy()
+    }
+
+    fun sendMessage(text: String) {
+        if (mStompClient != null) {
+            val message = ChatSocketMessage(messageText = text, author = "Me")
+            sendCompletable(mStompClient!!.send(CHAT_LINK_SOCKET, gson.toJson(message)))
         }
     }
 
@@ -117,7 +156,96 @@ class ChatClientService : Service() {
         }
     }
 
-    inner class MyBinder : Binder() {
+    private fun stompConnect() {
+        resetSubscriptions()
+
+        mStompClient = Stomp.over(Stomp.ConnectionProvider.JWS, SOCKET_URL, getHeaders())
+            .withServerHeartbeat(30000)
+
+        val topicSubscribe = mStompClient!!.topic(CHAT_TOPIC)
+            .subscribeOn(Schedulers.io(), false)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ topicMessage: StompMessage ->
+                Timber.tag("stompTAG").d("%s from subscribe", topicMessage.payload)
+                val message: ChatSocketMessage =
+                    gson.fromJson(topicMessage.payload, ChatSocketMessage::class.java)
+                showNotification(message.author.orEmpty(), message.messageText.orEmpty())
+                _serviceMessages.value = message
+            },
+                {
+                    Timber.tag("stompTAG").e(it, "Error!")
+                    _errorMsg.value = "Error! \n" + it.message.orEmpty()
+                }
+            )
+
+        val lifecycleSubscribe = mStompClient!!.lifecycle()
+            .subscribeOn(Schedulers.io(), false)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { lifecycleEvent ->
+                when (lifecycleEvent.type!!) {
+                    LifecycleEvent.Type.OPENED -> {
+                        Timber.tag("stompTAG").d("Stomp connection opened")
+                        _socketStatus.postValue(true)
+                    }
+
+                    LifecycleEvent.Type.ERROR -> Timber.tag("stompTAG")
+                        .e(lifecycleEvent.exception, "Error")
+
+                    LifecycleEvent.Type.FAILED_SERVER_HEARTBEAT,
+                    LifecycleEvent.Type.CLOSED -> {
+                        Timber.tag("stompTAG").d("Stomp connection closed")
+                        _socketStatus.postValue(false)
+                    }
+                }
+            }
+
+        compositeDisposable!!.add(lifecycleSubscribe)
+        compositeDisposable!!.add(topicSubscribe)
+
+        if (!mStompClient!!.isConnected) {
+            mStompClient!!.connect()
+        }
+    }
+
+    private fun disconnect() {
+        mStompClient?.disconnect()
+        compositeDisposable?.dispose()
+    }
+
+    private fun sendCompletable(request: Completable) {
+        compositeDisposable?.add(
+            request.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        Timber.tag("stompTAG").d("Stomp sended")
+                    },
+                    {
+                        Timber.tag("stompTAG").e(it, "Stomp error")
+                        _errorMsg.value = "Send Error! \n" + it.message.orEmpty()
+                    }
+                )
+        )
+    }
+
+    private fun resetSubscriptions() {
+        if (compositeDisposable != null) {
+            compositeDisposable!!.dispose()
+        }
+
+        compositeDisposable = CompositeDisposable()
+    }
+
+    private fun getHeaders() =
+        mutableMapOf<String, String>().apply {
+            put("Authorization", "Basic UG9sYXJCOmdoYmR0bg==")
+            put("user-name", "PolarB")
+            put("version", "1.1")
+            put("Accept-Encoding", "gzip, deflate")
+            put("Connection", "Upgrade")
+        }
+
+    inner class ChatServiceBinder : Binder() {
         val service: ChatClientService
             get() = this@ChatClientService
     }

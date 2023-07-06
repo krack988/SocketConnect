@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             Timber.i("service connected")
-            service = (binder as ChatClientService.MyBinder).service
+            service = (binder as ChatClientService.ChatServiceBinder).service
             isBindService = true
         }
 
@@ -68,8 +68,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding?.root)
-        createNotificationChannel()
-        createDefaultNotificationBuilder()
+//        createNotificationChannel()
+//        createDefaultNotificationBuilder()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             checkPushPermission()
@@ -86,27 +86,35 @@ class MainActivity : AppCompatActivity() {
 
         /** For test sercive connect */
         Handler(Looper.getMainLooper()).postDelayed({
-            service.serviceMessages.observeForever {
+            service.serviceMessages.observe(this) {
                 viewModel.messageFromService(it)
+            }
+
+            service.errorMsg.observe(this) {
+                showErrorSnackBar(it)
             }
         }, 1000)
     }
 
-    fun showNotification(title: String, message: String) {
-        when (PackageManager.PERMISSION_GRANTED) {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) -> {
-                with(NotificationManagerCompat.from(this)) {
-                    notificationBuilder?.let {
-                        it.setContentTitle(title)
-                        it.setContentText(message)
-                        notify(pushCounter++, it.build())
-                    }
-                }
-            }
-        }
+//    fun showNotification(title: String, message: String) {
+//        when (PackageManager.PERMISSION_GRANTED) {
+//            ContextCompat.checkSelfPermission(
+//                this,
+//                Manifest.permission.POST_NOTIFICATIONS
+//            ) -> {
+//                with(NotificationManagerCompat.from(this)) {
+//                    notificationBuilder?.let {
+//                        it.setContentTitle(title)
+//                        it.setContentText(message)
+//                        notify(pushCounter++, it.build())
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    fun sendMessage(text: String) {
+        service.sendMessage(text)
     }
 
     fun showErrorSnackBar(errorMessage: String) {
@@ -129,27 +137,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createDefaultNotificationBuilder() {
-        notificationBuilder = NotificationCompat.Builder(this, "CHANNEL_ID")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-    }
+//    private fun createDefaultNotificationBuilder() {
+//        notificationBuilder = NotificationCompat.Builder(this, "CHANNEL_ID")
+//            .setSmallIcon(R.drawable.ic_launcher_foreground)
+//            .setPriority(NotificationCompat.PRIORITY_HIGH)
+//            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+//            .setDefaults(NotificationCompat.DEFAULT_ALL)
+//    }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.channel_name)
-            val descriptionText = getString(R.string.channel_description)
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("CHANNEL_ID", name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
+//    private fun createNotificationChannel() {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            val name = getString(R.string.channel_name)
+//            val descriptionText = getString(R.string.channel_description)
+//            val importance = NotificationManager.IMPORTANCE_HIGH
+//            val channel = NotificationChannel("CHANNEL_ID", name, importance).apply {
+//                description = descriptionText
+//            }
+//            val notificationManager: NotificationManager =
+//                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//            notificationManager.createNotificationChannel(channel)
+//        }
+//    }
 
     private fun foregroundServiceRunning(): Boolean {
         val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
