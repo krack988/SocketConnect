@@ -52,10 +52,6 @@ class StartFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         webSocketListener = WebSocketListener(viewModel)
-//        pref = requireContext().getSharedPreferences(
-//            prefName,
-//            Context.MODE_PRIVATE
-//        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -102,7 +98,7 @@ class StartFragment : Fragment() {
     private fun setUpAuthData(login: String, password: String) {
         val authToken = "$login:$password".encodeBase64()
         saveLoginAndAuth(login, authToken)
-//        (activity as? MainActivity)?.startServiceWithCheck()
+        (activity as? MainActivity)?.startServiceWithCheck()
     }
 
 

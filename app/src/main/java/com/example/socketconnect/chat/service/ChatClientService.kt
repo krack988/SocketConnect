@@ -258,10 +258,10 @@ class ChatClientService : Service() {
         val authToken = App.pref?.getString(App.authPrefKey, "").orEmpty()
 
         return mutableMapOf<String, String>().apply {
-//            put("Authorization", "Basic $authToken")
-//            put("user-name", login)
-            put("Authorization", "Basic UG9sYXJCOmdoYmR0bg==")
-            put("user-name", "PolarB")
+            put("Authorization", "Basic $authToken")
+            put("user-name", login)
+//            put("Authorization", "Basic UG9sYXJCOmdoYmR0bg==")
+//            put("user-name", "PolarB")
 
             put("version", "1.1")
             put("Accept-Encoding", "gzip, deflate")

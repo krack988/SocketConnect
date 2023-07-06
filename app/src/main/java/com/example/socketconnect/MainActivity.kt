@@ -77,14 +77,10 @@ class MainActivity : AppCompatActivity() {
             checkPushPermission()
         }
 
-        if (!foregroundServiceRunning()) {
-            startService()
-        }
-        bindService(
-            Intent(this, ChatClientService::class.java),
-            chatServiceConnection,
-            Context.BIND_AUTO_CREATE
-        )
+//        if (!foregroundServiceRunning()) {
+//            startService()
+//        }
+        bindService()
     }
 
     fun startServiceWithCheck() {
@@ -144,11 +140,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startService() {
+        Timber.d("start service")
         val serviceIntent = Intent(this, ChatClientService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
         } else {
             startService(serviceIntent)
+        }
+        bindService()
+    }
+
+    private fun bindService() {
+        if (foregroundServiceRunning()) {
+            bindService(
+                Intent(this, ChatClientService::class.java),
+                chatServiceConnection,
+                Context.BIND_AUTO_CREATE
+            )
         }
     }
 
