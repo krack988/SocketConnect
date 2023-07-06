@@ -14,8 +14,11 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.R
+import com.example.socketconnect.chat.data.ChatSocketMessage
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
 
@@ -28,16 +31,8 @@ class ChatClientService : Service() {
     private var chatNotificationBuilder: NotificationCompat.Builder? = null
     private var pushCounter = 101
     private val mBinder: IBinder = MyBinder()
-    private val runnable = Runnable {
-        try {
-            viewModel?.stompConnect()
-            viewModel?.messages?.observeForever {
-                showNotification(it.author.orEmpty(), it.messageText.orEmpty())
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
+    private val _serviceMessages = MutableLiveData<ChatSocketMessage>()
+    val serviceMessages: LiveData<ChatSocketMessage> = _serviceMessages
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createServiceNotificationChannel()
@@ -51,13 +46,21 @@ class ChatClientService : Service() {
 
         startForeground(1, notificationBuilder.build())
 
-        viewModel = MainActivityViewModel()
-
         return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onBind(intent: Intent?): IBinder {
         return mBinder
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        viewModel = MainActivityViewModel()
+        viewModel?.stompConnect()
+        viewModel?.messages?.observeForever {
+            showNotification(it.author.orEmpty(), it.messageText.orEmpty())
+            _serviceMessages.postValue(it)
+        }
     }
 
     private fun showNotification(title: String, message: String) {
@@ -80,9 +83,9 @@ class ChatClientService : Service() {
     private fun createDefaultNotificationBuilder() {
         chatNotificationBuilder = NotificationCompat.Builder(this, "CHANNEL_ID")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setDefaults(Notification.DEFAULT_SOUND)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
     }
 
@@ -104,7 +107,7 @@ class ChatClientService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.channel_name)
             val descriptionText = getString(R.string.channel_description)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel("CHANNEL_ID", name, importance).apply {
                 description = descriptionText
             }

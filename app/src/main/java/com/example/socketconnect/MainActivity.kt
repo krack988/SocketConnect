@@ -5,11 +5,16 @@ import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
@@ -18,10 +23,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.example.socketconnect.chat.data.ChatSocketMessage
 import com.example.socketconnect.chat.service.ChatClientService
 import com.example.socketconnect.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 
 @AndroidEntryPoint
@@ -40,6 +49,20 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+    private lateinit var service: ChatClientService
+    private var isBindService = false
+    private val chatServiceConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+            Timber.i("service connected")
+            service = (binder as ChatClientService.MyBinder).service
+            isBindService = true
+        }
+
+        override fun onServiceDisconnected(p0: ComponentName?) {
+            isBindService = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +78,18 @@ class MainActivity : AppCompatActivity() {
         if (!foregroundServiceRunning()) {
             startService()
         }
+        bindService(
+            Intent(this, ChatClientService::class.java),
+            chatServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+
+        /** For test sercive connect */
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.serviceMessages.observeForever {
+                viewModel.messageFromService(it)
+            }
+        }, 1000)
     }
 
     fun showNotification(title: String, message: String) {
@@ -97,17 +132,16 @@ class MainActivity : AppCompatActivity() {
     private fun createDefaultNotificationBuilder() {
         notificationBuilder = NotificationCompat.Builder(this, "CHANNEL_ID")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setDefaults(Notification.DEFAULT_SOUND)
-            .setAutoCancel(true)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
     }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.channel_name)
             val descriptionText = getString(R.string.channel_description)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel("CHANNEL_ID", name, importance).apply {
                 description = descriptionText
             }
@@ -133,6 +167,13 @@ class MainActivity : AppCompatActivity() {
             startForegroundService(serviceIntent)
         } else {
             startService(serviceIntent)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isBindService) {
+            unbindService(chatServiceConnection)
         }
     }
 }

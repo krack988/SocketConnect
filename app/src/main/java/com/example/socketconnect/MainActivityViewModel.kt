@@ -88,6 +88,10 @@ class MainActivityViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun messageFromService(message: ChatSocketMessage) {
+        _messages.value = message
+    }
+
     fun sendMessage(text: String) {
         if (mStompClient != null) {
             val message = ChatSocketMessage(messageText = text, author = "Me")
