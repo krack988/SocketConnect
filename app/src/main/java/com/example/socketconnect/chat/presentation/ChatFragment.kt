@@ -42,12 +42,11 @@ class ChatFragment : Fragment() {
         binding?.sendMessageBtn?.setOnClickListener {
             val message = binding?.messageEV?.text.toString()
             binding?.messageEV?.text = null
-            activityViewModel.sendMessage(message)
+            (activity as? MainActivity)?.sendMessage(message)
         }
 
         activityViewModel.messages.observe(viewLifecycleOwner) {
             Timber.d(it.messageText)
-            showPush(it.author.orEmpty(), it.messageText.orEmpty())
             adapter?.updateMessageList(it)
             with(binding?.chatRV) {
                 this?.post {
@@ -55,9 +54,5 @@ class ChatFragment : Fragment() {
                 }
             }
         }
-    }
-
-    private fun showPush(title: String, message: String) {
-        (activity as? MainActivity)?.showNotification(title, message)
     }
 }

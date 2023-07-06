@@ -47,35 +47,15 @@ class StartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding?.connectBtn?.setOnClickListener {
-            activityViewModel.stompConnect()
-        }
-
-        binding?.testTV?.setOnClickListener {
-//            val testMessage = "Test message from android app"
-//            webSocket?.send(testMessage)
-//            viewModel.sendMessage(Pair(true, testMessage))
-            /** move to chat fragment for testing */
+        binding?.openChatBtn?.setOnClickListener {
             findNavController().navigate(StartFragmentDirections.toChat())
         }
 
+        binding?.connectBtn?.setOnClickListener {
+        }
+
         binding?.disconnectBtn?.setOnClickListener {
-            activityViewModel.disconnect()
         }
-
-        activityViewModel.socketStatus.observe(viewLifecycleOwner) {
-            if (it) {
-                findNavController().navigate(StartFragmentDirections.toChat())
-            }
-        }
-
-        activityViewModel.errorMsg.observe(viewLifecycleOwner) {
-            showError(it)
-        }
-
-//        viewModel.socketStatus.observe(viewLifecycleOwner) {
-//            Timber.tag(TIMBER_TEST_TAG).i(if (it) "Connected" else "Disconnected")
-//        }
     }
 
     private fun showError(error: String) {

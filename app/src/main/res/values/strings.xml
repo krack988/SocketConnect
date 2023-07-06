@@ -4,4 +4,10 @@
     <string name="send">Send</string>
     <string name="channel_description">Chat notification push</string>
     <string name="channel_name">Socket connect</string>
+    <string name="chanel_service_name">Push foreground service</string>
+    <string name="chat_service_title">Foreground service</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="open_chat">Open chat</string>
+    <string name="open_connect">Open connect</string>
 </resources>
