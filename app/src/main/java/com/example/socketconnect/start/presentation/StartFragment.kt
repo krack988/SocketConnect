@@ -47,28 +47,15 @@ class StartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding?.connectBtn?.setOnClickListener {
-//            activityViewModel.stompConnect()
-        }
-
-        binding?.testTV?.setOnClickListener {
-            /** move to chat fragment for testing */
+        binding?.openChatBtn?.setOnClickListener {
             findNavController().navigate(StartFragmentDirections.toChat())
         }
 
-        binding?.disconnectBtn?.setOnClickListener {
-//            activityViewModel.disconnect()
+        binding?.connectBtn?.setOnClickListener {
         }
 
-//        activityViewModel.socketStatus.observe(viewLifecycleOwner) {
-//            if (it) {
-//                findNavController().navigate(StartFragmentDirections.toChat())
-//            }
-//        }
-
-//        activityViewModel.errorMsg.observe(viewLifecycleOwner) {
-//            showError(it)
-//        }
+        binding?.disconnectBtn?.setOnClickListener {
+        }
     }
 
     private fun showError(error: String) {

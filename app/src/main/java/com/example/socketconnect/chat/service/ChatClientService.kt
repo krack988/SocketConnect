@@ -81,12 +81,6 @@ class ChatClientService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-//        viewModel = MainActivityViewModel()
-//        viewModel?.stompConnect()
-//        viewModel?.messages?.observeForever {
-//            showNotification(it.author.orEmpty(), it.messageText.orEmpty())
-//            _serviceMessages.postValue(it)
-//        }
         stompConnect()
     }
 
