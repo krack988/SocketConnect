@@ -87,6 +87,12 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    fun startServiceWithCheck() {
+        if (!foregroundServiceRunning()) {
+            startService()
+        }
+    }
+
     fun sendMessage(text: String) {
         service?.sendMessage(text)
     }

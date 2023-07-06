@@ -4,18 +4,23 @@ import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.socketconnect.App
+import com.example.socketconnect.MainActivity
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.R
 import com.example.socketconnect.chat.data.ChatSocketMessage
@@ -51,6 +56,8 @@ class ChatClientService : Service() {
     private val CHAT_TOPIC = "/all/messages"
     private val CHAT_LINK_SOCKET = "/app/application"
 
+    private var pref: SharedPreferences? = null
+
     private val _socketStatus = SingleLiveEvent<Boolean>()
     val socketStatus: LiveData<Boolean> = _socketStatus
 
@@ -81,6 +88,10 @@ class ChatClientService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+//        pref = context.getSharedPreferences(
+//            prefName,
+//            Context.MODE_PRIVATE
+//        )
         stompConnect()
     }
 
@@ -114,11 +125,23 @@ class ChatClientService : Service() {
     }
 
     private fun createDefaultNotificationBuilder() {
+        val intent = Intent(this, MainActivity::class.java)
+            .apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(intent)
+            getPendingIntent(0,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
         chatNotificationBuilder = NotificationCompat.Builder(this, "CHANNEL_ID")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setContentIntent(resultPendingIntent)
             .setAutoCancel(true)
     }
 
@@ -230,14 +253,21 @@ class ChatClientService : Service() {
         compositeDisposable = CompositeDisposable()
     }
 
-    private fun getHeaders() =
-        mutableMapOf<String, String>().apply {
+    private fun getHeaders(): Map<String, String> {
+        val login = App.pref?.getString(App.loginPrefKey, "").orEmpty()
+        val authToken = App.pref?.getString(App.authPrefKey, "").orEmpty()
+
+        return mutableMapOf<String, String>().apply {
+//            put("Authorization", "Basic $authToken")
+//            put("user-name", login)
             put("Authorization", "Basic UG9sYXJCOmdoYmR0bg==")
             put("user-name", "PolarB")
+
             put("version", "1.1")
             put("Accept-Encoding", "gzip, deflate")
             put("Connection", "Upgrade")
         }
+    }
 
     inner class ChatServiceBinder : Binder() {
         val service: ChatClientService
