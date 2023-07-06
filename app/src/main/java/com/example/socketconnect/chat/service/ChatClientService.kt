@@ -88,10 +88,6 @@ class ChatClientService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-//        pref = context.getSharedPreferences(
-//            prefName,
-//            Context.MODE_PRIVATE
-//        )
         stompConnect()
     }
 
@@ -105,6 +101,16 @@ class ChatClientService : Service() {
             val message = ChatSocketMessage(messageText = text, author = "Me")
             sendCompletable(mStompClient!!.send(CHAT_LINK_SOCKET, gson.toJson(message)))
         }
+    }
+
+    fun stopService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            stopForeground(true)
+        }
+
+        stopSelf()
     }
 
     private fun showNotification(title: String, message: String) {
@@ -127,13 +133,15 @@ class ChatClientService : Service() {
     private fun createDefaultNotificationBuilder() {
         val intent = Intent(this, MainActivity::class.java)
             .apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
 
         val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(intent)
-            getPendingIntent(0,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            getPendingIntent(
+                0,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         chatNotificationBuilder = NotificationCompat.Builder(this, "CHANNEL_ID")

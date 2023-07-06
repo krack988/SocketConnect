@@ -65,6 +65,7 @@ class StartFragment : Fragment() {
         }
 
         binding?.disconnectBtn?.setOnClickListener {
+            (activity as? MainActivity)?.stopChatService()
         }
 
         if (pref?.getString(authPrefKey, "").isNullOrEmpty()) {

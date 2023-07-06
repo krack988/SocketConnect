@@ -100,6 +100,10 @@ class MainActivity : AppCompatActivity() {
         snackBar?.show()
     }
 
+    fun stopChatService() {
+        service?.stopService()
+    }
+
     private fun serviceSubscription() {
         service?.serviceMessages?.observe(this) {
             viewModel.messageFromService(it)
