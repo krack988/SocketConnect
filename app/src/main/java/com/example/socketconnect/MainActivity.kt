@@ -77,14 +77,16 @@ class MainActivity : AppCompatActivity() {
             checkPushPermission()
         }
 
+//        if (!foregroundServiceRunning()) {
+//            startService()
+//        }
+        bindService()
+    }
+
+    fun startServiceWithCheck() {
         if (!foregroundServiceRunning()) {
             startService()
         }
-        bindService(
-            Intent(this, ChatClientService::class.java),
-            chatServiceConnection,
-            Context.BIND_AUTO_CREATE
-        )
     }
 
     fun sendMessage(text: String) {
@@ -96,6 +98,10 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(it, errorMessage, Snackbar.LENGTH_SHORT)
         }
         snackBar?.show()
+    }
+
+    fun stopChatService() {
+        service?.stopService()
     }
 
     private fun serviceSubscription() {
@@ -138,11 +144,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startService() {
+        Timber.d("start service")
         val serviceIntent = Intent(this, ChatClientService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
         } else {
             startService(serviceIntent)
+        }
+        bindService()
+    }
+
+    private fun bindService() {
+        if (foregroundServiceRunning()) {
+            bindService(
+                Intent(this, ChatClientService::class.java),
+                chatServiceConnection,
+                Context.BIND_AUTO_CREATE
+            )
         }
     }
 

@@ -10,4 +10,7 @@
     <string name="disconnect">Disconnect</string>
     <string name="open_chat">Open chat</string>
     <string name="open_connect">Open connect</string>
+    <string name="sign_in">Sign In</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
 </resources>
