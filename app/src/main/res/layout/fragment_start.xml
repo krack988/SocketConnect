@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:enabled="false"
+        android:enabled="true"
         android:text="@string/connect"
         app:layout_constraintBottom_toTopOf="@+id/disconnectBtn"
         app:layout_constraintEnd_toEndOf="parent"
