@@ -60,7 +60,7 @@ class StartFragment : Fragment() {
             findNavController().navigate(StartFragmentDirections.toChat())
         }
 
-        binding?.connectBtn?.setOnClickListener {
+        binding?.nextActBtn?.setOnClickListener {
             startActivity(Intent(requireContext(), CrossSocketActivity::class.java))
         }
 
