@@ -1,7 +1,6 @@
 package com.example.socketconnect.start.presentation
 
-import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,13 +10,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.example.socketconnect.App
 import com.example.socketconnect.App.Companion.authPrefKey
 import com.example.socketconnect.App.Companion.loginPrefKey
 import com.example.socketconnect.App.Companion.pref
 import com.example.socketconnect.MainActivity
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.R
+import com.example.socketconnect.cross.CrossSocketActivity
 import com.example.socketconnect.databinding.FragmentStartBinding
 import com.example.socketconnect.socket.SocketViewModel
 import com.example.socketconnect.socket.listener.WebSocketListener
@@ -61,7 +60,8 @@ class StartFragment : Fragment() {
             findNavController().navigate(StartFragmentDirections.toChat())
         }
 
-        binding?.connectBtn?.setOnClickListener {
+        binding?.nextActBtn?.setOnClickListener {
+            startActivity(Intent(requireContext(), CrossSocketActivity::class.java))
         }
 
         binding?.disconnectBtn?.setOnClickListener {

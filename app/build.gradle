@@ -71,6 +71,7 @@ dependencies {
     implementation 'com.github.NaikSoftware:StompProtocolAndroid:1.6.4'
     implementation("org.hildan.krossbow:krossbow-stomp-core:5.3.0")
     implementation("org.hildan.krossbow:krossbow-websocket-ktor:5.3.0")
+    implementation("io.ktor:ktor-client-cio:2.3.1")
 
     //GSON
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
