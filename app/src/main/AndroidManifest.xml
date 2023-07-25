@@ -50,6 +50,10 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <service android:name=".cross.service.TestCrossbowService"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 
 </manifest>
