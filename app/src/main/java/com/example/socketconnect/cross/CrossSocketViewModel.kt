@@ -19,7 +19,9 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
-class CrossSocketViewModel @Inject constructor() : ViewModel() {
+class CrossSocketViewModel @Inject constructor(
+    private val accessInterceptor: AccessInterceptor
+) : ViewModel() {
 
     private val SOCKET_URL = "ws://192.168.100.5:8080/ws/websocket"
     private val CHAT_TOPIC = "/all/messages"
@@ -29,7 +31,7 @@ class CrossSocketViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch(Dispatchers.Default) {
 
             val okHttpClient = OkHttpClient.Builder()
-                .addInterceptor(AccessInterceptor())
+                .addInterceptor(accessInterceptor)
                 .callTimeout(100000, TimeUnit.MILLISECONDS)
                 .pingInterval(30000, TimeUnit.MILLISECONDS)
                 .connectTimeout(30000, TimeUnit.MILLISECONDS)

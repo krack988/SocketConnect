@@ -33,9 +33,13 @@ import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class TestCrossbowService : Service() {
+
+    @Inject
+    lateinit var accessInterceptor: AccessInterceptor
 
     private val SOCKET_URL = "ws://192.168.100.5:8080/ws/websocket"
     private val CHAT_TOPIC = "/all/messages"
@@ -98,7 +102,7 @@ class TestCrossbowService : Service() {
 
     private fun getOkHttpClient() =
         OkHttpClient.Builder()
-            .addInterceptor(AccessInterceptor())
+            .addInterceptor(accessInterceptor)
             .callTimeout(100000, TimeUnit.MILLISECONDS)
             .pingInterval(30000, TimeUnit.MILLISECONDS)
             .connectTimeout(30000, TimeUnit.MILLISECONDS)

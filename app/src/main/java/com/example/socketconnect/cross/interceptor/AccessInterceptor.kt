@@ -1,10 +1,11 @@
 package com.example.socketconnect.cross.interceptor
 
+import android.content.Context
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 
-class AccessInterceptor @Inject constructor() : Interceptor {
+class AccessInterceptor @Inject constructor(val ctx: Context) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
 
