@@ -76,10 +76,9 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             checkPushPermission()
         }
-        bindService()
     }
 
-    fun startServiceWithCheck() {
+    fun startOldServiceWithCheck() {
         if (!foregroundServiceRunning()) {
             startService()
         }

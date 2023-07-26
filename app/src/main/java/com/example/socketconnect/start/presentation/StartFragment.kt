@@ -1,7 +1,10 @@
 package com.example.socketconnect.start.presentation
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +20,7 @@ import com.example.socketconnect.MainActivity
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.R
 import com.example.socketconnect.cross.CrossSocketActivity
+import com.example.socketconnect.cross.service.TestCrossbowService
 import com.example.socketconnect.databinding.FragmentStartBinding
 import com.example.socketconnect.socket.SocketViewModel
 import com.example.socketconnect.socket.listener.WebSocketListener
@@ -35,10 +39,6 @@ class StartFragment : Fragment() {
     private val viewModel: SocketViewModel by viewModels()
     private val activityViewModel: MainActivityViewModel by activityViewModels()
 
-    private lateinit var webSocketListener: WebSocketListener
-    private val okHttpClient = OkHttpClient()
-    private var webSocket: WebSocket? = null
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -46,11 +46,6 @@ class StartFragment : Fragment() {
     ): View? {
         binding = FragmentStartBinding.inflate(inflater, container, false)
         return binding?.root
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        webSocketListener = WebSocketListener(viewModel)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,7 +56,8 @@ class StartFragment : Fragment() {
         }
 
         binding?.nextActBtn?.setOnClickListener {
-            startActivity(Intent(requireContext(), CrossSocketActivity::class.java))
+            startCrossService()
+            openChat()
         }
 
         binding?.disconnectBtn?.setOnClickListener {
@@ -99,8 +95,8 @@ class StartFragment : Fragment() {
     private fun setUpAuthData(login: String, password: String) {
         val authToken = "$login:$password".encodeBase64()
         saveLoginAndAuth(login, authToken)
-        // start old service, current work service is TestCrossbowService
-//        (activity as? MainActivity)?.startServiceWithCheck()
+        startCrossService()
+        openChat()
     }
 
 
@@ -109,20 +105,25 @@ class StartFragment : Fragment() {
         pref?.edit()?.putString(authPrefKey, auth)?.apply()
     }
 
-
-    @Deprecated("Old socket connect")
-    private fun connect() {
-        try {
-            val request = viewModel.getConnectRequest()
-            webSocket = okHttpClient.newWebSocket(request, webSocketListener)
-        } catch (e: Exception) {
-            Timber.tag(TIMBER_TEST_TAG).e(e, "Connect error")
-        }
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         binding = null
+    }
+
+    private fun startCrossService() {
+        Timber.d("start service")
+        val serviceIntent = Intent(requireContext(), TestCrossbowService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            activity?.startForegroundService(serviceIntent)
+        } else {
+            activity?.startService(serviceIntent)
+        }
+    }
+
+    private fun openChat() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            startActivity(Intent(requireContext(), CrossSocketActivity::class.java))
+        }, 500)
     }
 
     companion object {

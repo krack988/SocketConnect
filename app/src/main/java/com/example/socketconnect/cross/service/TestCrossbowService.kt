@@ -93,8 +93,8 @@ class TestCrossbowService : Service() {
                     gson.fromJson(msg, ChatSocketMessage::class.java)
                 showNotification(message.author.orEmpty(), message.messageText.orEmpty())
 
-                val sendIntent = Intent("test.action").apply {
-                    putExtra("msg", message.messageText)
+                val sendIntent = Intent(chatIntentFilterAction).apply {
+                    putExtra(inputChatMessageId, message)
                 }
                 LocalBroadcastManager.getInstance(this).sendBroadcast(sendIntent)
             }
@@ -180,5 +180,11 @@ class TestCrossbowService : Service() {
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
+    }
+
+    companion object {
+        const val chatIntentFilterAction = "chat.intent.filter.action"
+        const val inputChatMessageId = "inputMessageId"
+        const val outputChatMessageId = "outputMessageId"
     }
 }

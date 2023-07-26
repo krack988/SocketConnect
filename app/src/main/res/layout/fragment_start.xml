@@ -43,6 +43,7 @@
         android:layout_margin="16dp"
         android:enabled="false"
         android:text="@string/connect"
+        android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/disconnectBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -54,6 +55,7 @@
         android:layout_margin="16dp"
         android:enabled="false"
         android:text="@string/disconnect"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
