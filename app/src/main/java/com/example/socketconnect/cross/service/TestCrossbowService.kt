@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.socketconnect.MainActivity
 import com.example.socketconnect.R
 import com.example.socketconnect.chat.data.ChatSocketMessage
@@ -91,6 +92,11 @@ class TestCrossbowService : Service() {
                 val message: ChatSocketMessage =
                     gson.fromJson(msg, ChatSocketMessage::class.java)
                 showNotification(message.author.orEmpty(), message.messageText.orEmpty())
+
+                val sendIntent = Intent("test.action").apply {
+                    putExtra("msg", message.messageText)
+                }
+                LocalBroadcastManager.getInstance(this).sendBroadcast(sendIntent)
             }
         } catch (e: Exception) {
             Timber.e(e, "Connect error!")

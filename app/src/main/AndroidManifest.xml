@@ -53,7 +53,8 @@
 
         <service android:name=".cross.service.TestCrossbowService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
     </application>
 
 </manifest>
