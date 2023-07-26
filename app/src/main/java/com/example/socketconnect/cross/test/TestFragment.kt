@@ -1,5 +1,7 @@
 package com.example.socketconnect.cross.test
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,9 +10,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import com.example.socketconnect.cross.CrossSocketViewModel
+import com.example.socketconnect.cross.service.TestCrossbowService
 import com.example.socketconnect.databinding.FragmentTestBinding
 import com.example.socketconnect.socket.SocketViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class TestFragment: Fragment() {
@@ -31,7 +35,19 @@ class TestFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding?.btnTest?.setOnClickListener {
-            activityViewModel.crossConnect()
+//            activityViewModel.crossConnect()
+            startCrossService()
         }
+    }
+
+    private fun startCrossService() {
+        Timber.d("start service")
+        val serviceIntent = Intent(requireContext(), TestCrossbowService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            activity?.startForegroundService(serviceIntent)
+        } else {
+            activity?.startService(serviceIntent)
+        }
+//        bindService()
     }
 }

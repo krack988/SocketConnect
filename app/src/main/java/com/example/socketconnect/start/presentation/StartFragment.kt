@@ -99,7 +99,8 @@ class StartFragment : Fragment() {
     private fun setUpAuthData(login: String, password: String) {
         val authToken = "$login:$password".encodeBase64()
         saveLoginAndAuth(login, authToken)
-        (activity as? MainActivity)?.startServiceWithCheck()
+        // start old service, current work service is TestCrossbowService
+//        (activity as? MainActivity)?.startServiceWithCheck()
     }
 
 
@@ -121,7 +122,6 @@ class StartFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-//        okHttpClient.dispatcher.executorService.shutdown()
         binding = null
     }
 
