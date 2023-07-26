@@ -52,7 +52,9 @@ class StartFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding?.openChatBtn?.setOnClickListener {
-            findNavController().navigate(StartFragmentDirections.toChat())
+//            findNavController().navigate(StartFragmentDirections.toChat())
+            startCrossService()
+            openChat()
         }
 
         binding?.nextActBtn?.setOnClickListener {

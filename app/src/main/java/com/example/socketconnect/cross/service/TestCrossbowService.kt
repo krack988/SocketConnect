@@ -5,8 +5,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
@@ -30,6 +32,7 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
+import org.hildan.krossbow.stomp.sendText
 import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 import timber.log.Timber
@@ -52,6 +55,7 @@ class TestCrossbowService : Service() {
     private var session: StompSession? = null
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
+    private var serviceReceiver: BroadcastReceiver? = null
 
     override fun onBind(p0: Intent?): IBinder? {
         TODO("Not yet implemented")
@@ -74,12 +78,20 @@ class TestCrossbowService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        registerBroadcast()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         scope.launch {
             session?.disconnect()
         }
         job.cancel()
+        serviceReceiver?.let {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(it)
+        }
     }
 
     private suspend fun connect() {
@@ -93,7 +105,7 @@ class TestCrossbowService : Service() {
                     gson.fromJson(msg, ChatSocketMessage::class.java)
                 showNotification(message.author.orEmpty(), message.messageText.orEmpty())
 
-                val sendIntent = Intent(chatIntentFilterAction).apply {
+                val sendIntent = Intent(chatInputIntentFilterAction).apply {
                     putExtra(inputChatMessageId, message)
                 }
                 LocalBroadcastManager.getInstance(this).sendBroadcast(sendIntent)
@@ -182,9 +194,36 @@ class TestCrossbowService : Service() {
         }
     }
 
+    private fun registerBroadcast() {
+        val filter = IntentFilter()
+        filter.addAction(chatOutputIntentFilterAction)
+
+        serviceReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent?) {
+                if (intent != null) {
+                    val outputMessage = intent.getStringExtra(outputChatMessageId)
+                    val author = intent.getStringExtra(authorId)
+                    sendMessage(outputMessage.orEmpty(), author.orEmpty())
+                }
+            }
+        }
+        serviceReceiver?.let {
+            LocalBroadcastManager.getInstance(this).registerReceiver(it, filter)
+        }
+    }
+
+    private fun sendMessage(messageText: String, author: String) {
+        scope.launch {
+            val message = ChatSocketMessage(messageText = messageText, author = author)
+            session?.sendText(CHAT_TOPIC, gson.toJson(message))
+        }
+    }
+
     companion object {
-        const val chatIntentFilterAction = "chat.intent.filter.action"
+        const val chatInputIntentFilterAction = "chat.input.intent.filter.action"
+        const val chatOutputIntentFilterAction = "chat.output.intent.filter.action"
         const val inputChatMessageId = "inputMessageId"
         const val outputChatMessageId = "outputMessageId"
+        const val authorId = "authorID"
     }
 }

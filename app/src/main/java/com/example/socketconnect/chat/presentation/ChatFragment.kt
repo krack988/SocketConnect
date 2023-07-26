@@ -13,12 +13,17 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.socketconnect.App
 import com.example.socketconnect.MainActivity
 import com.example.socketconnect.MainActivityViewModel
 import com.example.socketconnect.chat.ChatViewModel
 import com.example.socketconnect.chat.data.ChatSocketMessage
-import com.example.socketconnect.cross.service.TestCrossbowService.Companion.chatIntentFilterAction
+import com.example.socketconnect.cross.service.TestCrossbowService
+import com.example.socketconnect.cross.service.TestCrossbowService.Companion.authorId
+import com.example.socketconnect.cross.service.TestCrossbowService.Companion.chatInputIntentFilterAction
+import com.example.socketconnect.cross.service.TestCrossbowService.Companion.chatOutputIntentFilterAction
 import com.example.socketconnect.cross.service.TestCrossbowService.Companion.inputChatMessageId
+import com.example.socketconnect.cross.service.TestCrossbowService.Companion.outputChatMessageId
 import com.example.socketconnect.databinding.FragmentChatBinding
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -31,6 +36,8 @@ class ChatFragment : Fragment() {
     private val activityViewModel: MainActivityViewModel by activityViewModels()
     private var adapter: ChatAdapter? = null
     private var receiver: BroadcastReceiver? = null
+    private val prefName = "SocketChat"
+    private var author: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,7 +58,8 @@ class ChatFragment : Fragment() {
         binding?.sendMessageBtn?.setOnClickListener {
             val message = binding?.messageEV?.text.toString()
             binding?.messageEV?.text = null
-            (activity as? MainActivity)?.sendMessage(message)
+
+            sendMessage(message)
         }
 
         registerBroadcast()
@@ -65,6 +73,20 @@ class ChatFragment : Fragment() {
                 }
             }
         }
+
+        val pref = requireContext().getSharedPreferences(
+            prefName,
+            Context.MODE_PRIVATE
+        )
+        author = pref?.getString(App.loginPrefKey, "").orEmpty()
+    }
+
+    private fun sendMessage(messageText: String) {
+        val sendIntent = Intent(chatOutputIntentFilterAction).apply {
+            putExtra(outputChatMessageId, messageText)
+            putExtra(authorId, author)
+        }
+        LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(sendIntent)
     }
 
     override fun onPause() {
@@ -76,7 +98,7 @@ class ChatFragment : Fragment() {
 
     private fun registerBroadcast() {
         val filter = IntentFilter()
-        filter.addAction(chatIntentFilterAction)
+        filter.addAction(chatInputIntentFilterAction)
 
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent?) {
