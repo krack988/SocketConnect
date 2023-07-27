@@ -50,7 +50,6 @@ class StartFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding?.openChatBtn?.setOnClickListener {
 //            findNavController().navigate(StartFragmentDirections.toChat())
             startCrossService()
@@ -113,12 +112,14 @@ class StartFragment : Fragment() {
     }
 
     private fun startCrossService() {
-        Timber.d("start service")
-        val serviceIntent = Intent(requireContext(), TestCrossbowService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            activity?.startForegroundService(serviceIntent)
-        } else {
-            activity?.startService(serviceIntent)
+        if (!TestCrossbowService.isRunning) {
+            Timber.d("start service")
+            val serviceIntent = Intent(requireContext(), TestCrossbowService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                activity?.startForegroundService(serviceIntent)
+            } else {
+                activity?.startService(serviceIntent)
+            }
         }
     }
 

@@ -62,6 +62,7 @@ class TestCrossbowService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        isRunning = true
         createServiceNotificationChannel()
         createChatNotificationChannel()
         createDefaultNotificationBuilder()
@@ -85,6 +86,7 @@ class TestCrossbowService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isRunning = false
         scope.launch {
             session?.disconnect()
         }
@@ -220,6 +222,7 @@ class TestCrossbowService : Service() {
     }
 
     companion object {
+        var isRunning: Boolean = false
         const val chatInputIntentFilterAction = "chat.input.intent.filter.action"
         const val chatOutputIntentFilterAction = "chat.output.intent.filter.action"
         const val inputChatMessageId = "inputMessageId"
